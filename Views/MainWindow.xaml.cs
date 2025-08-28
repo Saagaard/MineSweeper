@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace MineSweeper
 {
@@ -29,6 +30,9 @@ namespace MineSweeper
         int fieldAmount = 100;
         int mineAmount;
         int checkedFieldsAmount = 0;
+
+        private DispatcherTimer timer;
+        private int seconds = 0;
 
         int[,] mineFields =
     {
@@ -64,6 +68,7 @@ namespace MineSweeper
             createGridButtons();
             mineAmount = random.Next(10, 16);
             generateMines(mineAmount);
+            startTimer();
         }
 
         private void createGridButtons()
@@ -88,53 +93,6 @@ namespace MineSweeper
             }
         }
 
-        void checkField(Button button)
-        {
-
-            var (row, column) = ((int, int))button.Tag;
-
-            // Check if field has already been pressed/checked
-            if (checkedFields[row, column] == 0)
-            {
-                Console.WriteLine("printer det her?");
-
-                //Check if game ends
-                if (mineFields[row, column] == 1)
-                {
-                    endGame(0);
-                }
-                else
-                {
-                    checkedFieldsAmount = checkedFieldsAmount + 1;
-                    if (checkedFieldsAmount >= (fieldAmount - mineAmount))
-                    {
-                        endGame(1);
-                    }
-                }
-
-                // Calculates the amount of adjacent mines
-                int adjacentMines = 0;
-                for (int i = -1; i < 2; i++)
-                {
-                    for (int j = -1; j < 2; j++)
-                    {
-                        if (row + i < 0 || row + i >= mineFields.GetLength(0) || column + j < 0 || column + j >= mineFields.GetLength(1))
-                        {
-                            continue;
-                        }
-                        if (mineFields[row + i, column + j] == 1)
-                        {
-                            adjacentMines++;
-                        }
-                    }
-                }
-
-                checkedFields[row, column] = 1;
-                button.Style = (Style)FindResource("buttonPressed");
-                button.Content = adjacentMines >= 0 ? adjacentMines.ToString() : "";
-            }
-        }
-
         void generateMines(int mineAmount)
         {
             int minesGenerated = 0;
@@ -156,6 +114,58 @@ namespace MineSweeper
             textMines.Text = "Number of mines: " + mineAmount.ToString();
         }
 
+        void checkField(Button button)
+        {
+            if (gameOver) return;
+
+            var (row, column) = ((int, int))button.Tag;
+
+            // Check if field has already been pressed/checked
+            if (checkedFields[row, column] == 0)
+            {
+                //Console.WriteLine("printer det her?");
+
+                //Check if game ends
+                if (mineFields[row, column] == 1)
+                {
+                    button.Style = (Style)FindResource("minePressed");
+                    button.Content = "M";
+                    endGame(0);
+                    return;
+                }
+                else
+                {
+                    checkedFieldsAmount = checkedFieldsAmount + 1;
+                    if (checkedFieldsAmount >= (fieldAmount - mineAmount))
+                    {
+                        endGame(1);
+                    }
+                }
+
+                // Calculates the amount of adjacent mines
+                int adjacentMines = 0;
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        // Check out-of-bounds
+                        if (row + i < 0 || row + i >= mineFields.GetLength(0) || column + j < 0 || column + j >= mineFields.GetLength(1))
+                        {
+                            continue;
+                        }
+                        if (mineFields[row + i, column + j] == 1)
+                        {
+                            adjacentMines++;
+                        }
+                    }
+                }
+
+                checkedFields[row, column] = 1;
+                button.Style = (Style)FindResource("buttonPressed");
+                button.Content = adjacentMines >= 0 ? adjacentMines.ToString() : "";
+            }
+        }
+
         void endGame(int winLose)
         {
             if (winLose == 0)
@@ -172,9 +182,24 @@ namespace MineSweeper
 
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void startTimer()
         {
-
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += updateTimer;
+            timer.Start();
         }
+
+        private void updateTimer(object sender, EventArgs e)
+        {
+            seconds++;
+            gameTimer.Content = $"Time: {seconds}s";
+
+            if (gameOver)
+            {
+                timer.Stop();
+            }
+        }
+
     }
 }
