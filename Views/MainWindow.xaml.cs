@@ -23,12 +23,11 @@ namespace MineSweeper
     public partial class MainWindow : Window
     {
         private const int Rows = 10;
-        private const int Columns = 10;
+        private const int Columns = 10; // Hard coded grid-size because lazy
 
         Random random = new Random();
         bool gameOver = false;
 
-        int fieldAmount = 100;
         int mineAmount;
         int checkedFieldsAmount = 0;
 
@@ -49,6 +48,7 @@ namespace MineSweeper
                 {0,0,0,0,0,0,0,0,0,0}
                 };
 
+        // To keep track of which buttons have been pressed
         int[,] checkedFields =
             {
                 {0,0,0,0,0,0,0,0,0,0},
@@ -67,7 +67,7 @@ namespace MineSweeper
         {
             InitializeComponent();
             createGridButtons();
-            mineAmount = random.Next(10, 16);
+            mineAmount = random.Next(10, 16); // Between 10-15 mines
             generateMines(mineAmount);
             startTimer();
         }
@@ -81,7 +81,7 @@ namespace MineSweeper
                     var button = new Button
                     {
                         Content = "",
-                        Tag = (row, col)
+                        Tag = (row, col) // Saving the grid position for future uses
                     };
 
                     Grid.SetRow(button, row);
@@ -102,7 +102,7 @@ namespace MineSweeper
             {
                 int newMineRow = random.Next(0, mineFields.GetLength(0));
                 int newMineColumn = random.Next(0, mineFields.GetLength(1));
-                Console.WriteLine("Position: " + newMineRow + "," + newMineColumn);
+                //Console.WriteLine("Position: " + newMineRow + "," + newMineColumn);
 
                 if (mineFields[newMineRow, newMineColumn] == 0)
                 {
@@ -119,15 +119,13 @@ namespace MineSweeper
         {
             if (gameOver) return;
 
-            var (row, column) = ((int, int))button.Tag;
+            var (row, column) = ((int, int))button.Tag; // Takes the coordinates from the button's tag
 
             // Check if field has already been pressed/checked
             if (checkedFields[row, column] == 0)
             {
-                //Console.WriteLine("printer det her?");
-
                 //Check if game ends
-                if (mineFields[row, column] == 1)
+                if (mineFields[row, column] == 1) // If mine is pressed
                 {
                     button.Style = (Style)FindResource("minePressed");
                     button.Content = "M";
@@ -137,7 +135,7 @@ namespace MineSweeper
                 else
                 {
                     checkedFieldsAmount = checkedFieldsAmount + 1;
-                    if (checkedFieldsAmount >= (fieldAmount - mineAmount))
+                    if (checkedFieldsAmount >= (mineFields.GetLength(0) * mineFields.GetLength(1) - mineAmount))
                     {
                         endGame(1);
                     }
@@ -154,6 +152,7 @@ namespace MineSweeper
                         {
                             continue;
                         }
+
                         if (mineFields[row + i, column + j] == 1)
                         {
                             adjacentMines++;
@@ -164,6 +163,7 @@ namespace MineSweeper
                 checkedFields[row, column] = 1;
                 button.Style = (Style)FindResource("buttonPressed");
                 button.Content = adjacentMines >= 0 ? adjacentMines.ToString() : "";
+
             }
         }
 
@@ -183,6 +183,7 @@ namespace MineSweeper
 
         }
 
+        // Starts a timer/stopwatch
         private void startTimer()
         {
             stopwatch = Stopwatch.StartNew();
@@ -193,6 +194,7 @@ namespace MineSweeper
             timer.Start();
         }
 
+        // Updates the UI label
         private void updateTimer(object sender, EventArgs e)
         {
             var timeElapsed = stopwatch.Elapsed;
