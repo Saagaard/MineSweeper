@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,8 +32,8 @@ namespace MineSweeper
         int mineAmount;
         int checkedFieldsAmount = 0;
 
+        private Stopwatch stopwatch;
         private DispatcherTimer timer;
-        private int seconds = 0;
 
         int[,] mineFields =
     {
@@ -184,16 +185,18 @@ namespace MineSweeper
 
         private void startTimer()
         {
+            stopwatch = Stopwatch.StartNew();
+
             timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Interval = TimeSpan.FromMilliseconds(100);
             timer.Tick += updateTimer;
             timer.Start();
         }
 
         private void updateTimer(object sender, EventArgs e)
         {
-            seconds++;
-            gameTimer.Content = $"Time: {seconds}s";
+            var timeElapsed = stopwatch.Elapsed;
+            gameTimer.Content = $"Time: {timeElapsed.Minutes:D2}:{timeElapsed.Seconds:D2}";
 
             if (gameOver)
             {
